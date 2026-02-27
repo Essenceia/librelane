@@ -26,11 +26,13 @@ set sta_report_default_digits 6
 read_timing_info
 
 set error_count 0
+puts "env : $::env(_check_macro_instances)"
+
 foreach {instance_name macro_name} $::env(_check_macro_instances) {
     set instances [get_cells $instance_name]
     set instance_count [llength $instances]
     if { $instance_count < 1 } {
-        puts stderr "\[ERROR\] No macro instance $instance_name found."
+        puts stderr "\[ERROR\] NANANA No macro instance $instance_name found."
         incr error_count
     } elseif { $instance_count > 1 } {
         puts stderr "\[ERROR\] Macro instance name $instance_name matches multiple cells."

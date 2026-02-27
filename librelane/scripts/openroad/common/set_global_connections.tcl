@@ -19,13 +19,17 @@ proc set_global_connections {} {
     # Make global connections for macros
     if { $::env(PDN_CONNECT_MACROS_TO_GRID) == 1 &&
         [info exists ::env(PDN_MACRO_CONNECTIONS)]} {
+		puts "has macro connection list $::env(PDN_MACRO_CONNECTIONS)"
         foreach pdn_hook $::env(PDN_MACRO_CONNECTIONS) {
+			puts "setting hook $pdn_hook"
             set pdn_hook [regexp -all -inline {\S+} $pdn_hook]
+			puts "setting hook $pdn_hook"
             set instance_name [lindex $pdn_hook 0]
             set power_net [lindex $pdn_hook 1]
             set ground_net [lindex $pdn_hook 2]
             set power_pin [lindex $pdn_hook 3]
             set ground_pin [lindex $pdn_hook 4]
+			puts "instance name $instance_name \npower: $power_net -> $power_pin\ngnd: $ground_net -> $ground_pin"
 
             if { $power_pin == "" || $ground_pin == "" } {
                 puts "PDN_MACRO_CONNECTIONS missing power and ground pin names"
