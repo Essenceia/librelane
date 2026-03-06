@@ -14,10 +14,8 @@
 
 LibreLane is an ASIC infrastructure library based on several components including
 OpenROAD, Yosys, Magic, Netgen, CVC, KLayout and a number of custom scripts for
-design exploration and optimization, currently developed and maintained by
-members and affiliates of the
-[American University in Cairo Open Hardware Lab](https://github.com/aucohl)
-under the stewardship of the [FOSSi Foundation](https://fossi-foundation.org).
+design exploration and optimization, currently developed and maintained under
+the stewardship of the [FOSSi Foundation](https://fossi-foundation.org).
 
 A reference flow, "Classic", performs all ASIC implementation steps from RTL all
 the way down to GDSII.
@@ -106,6 +104,18 @@ If you use LibreLane in your research, please cite the following paper.
   pages={1-6},
   doi={}}
 ```
+
+## Contributing
+Thank you in advance for considering a contribution to LibreLane!
+
+Please be sure to read our [contributor's guide](https://librelane.readthedocs.io/en/stable/contributors/index.html).
+
+> [!TIP]
+>
+> The `main` branch is the stable branch for LibreLane, i.e., this branch is
+> updated less frequently and only accepts bugfixes.
+>
+> Feature contributions should be directed towards the `dev` branch.
 
 ## License and Legal Info
 

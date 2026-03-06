@@ -5,7 +5,7 @@ dist: venv/manifest.txt
 
 .PHONY: mount
 mount:
-	@echo "make mount is not needed in LibreLane 2+. You may simply call 'librelane --dockerized'."
+	@echo "make mount is not needed in LibreLane. You may simply call 'librelane --dockerized'."
 
 .PHONY: pdk pull-openlane pull-librelane
 pdk pull-openlane pull-librelane:
@@ -57,7 +57,7 @@ coverage-infrastructure:
 coverage-steps:
 	python3 -m pytest -n auto\
 		--cov=librelane.steps --cov-config=.coveragerc-steps --cov-report html:htmlcov_steps --cov-report term\
-		--step-rx "." -k test_all_steps
+		-k test_all_steps
 
 .PHONY: check-license
 check-license: venv/manifest.txt

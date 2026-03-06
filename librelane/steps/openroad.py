@@ -239,6 +239,23 @@ class OpenROADStep(TclStep):
             pdk=True,
         ),
         Variable(
+            "SIGNAL_WIRE_RC_LAYERS",
+            Optional[List[str]],
+            "Sets estimated signal wire RC values to the average of these layers'. If you provide more than two, the averages are grouped by preferred routing direction and you must provide at least one layer for each routing direction.",
+            pdk=True,
+            deprecated_names=[
+                ("WIRE_RC_LAYER", lambda x: [x]),
+                ("DATA_WIRE_RC_LAYER", lambda x: [x]),
+            ],
+        ),
+        Variable(
+            "CLOCK_WIRE_RC_LAYERS",
+            Optional[List[str]],
+            "Sets estimated clock wire RC values to the average of these layers'. If you provide more than two, the averages are grouped by preferred routing direction and you must provide at least one layer for each routing direction.",
+            pdk=True,
+            deprecated_names=[("CLOCK_WIRE_RC_LAYER", lambda x: [x])],
+        ),
+        Variable(
             "PDN_CONNECT_MACROS_TO_GRID",
             bool,
             "Enables the connection of macros to the top level power grid.",
@@ -267,6 +284,11 @@ class OpenROADStep(TclStep):
             "FP_DEF_TEMPLATE",
             Optional[Path],
             "Points to the DEF file to be used as a template.",
+        ),
+        Variable(
+            "STA_EXTRA_CORNER_TCL_FILE",
+            Optional[Path],
+            "Experimental: specifies a additional configuration .tcl file to be called during (PnR) steps.",
         ),
         Variable(
             "DEDUPLICATE_CORNERS",
@@ -308,6 +330,8 @@ class OpenROADStep(TclStep):
         env["_MACRO_LIBS"] = TclStep.value_to_tcl(
             self.toolbox.get_macro_views(self.config, DesignFormat.LIB)
         )
+        if self.config["STA_EXTRA_CORNER_TCL_FILE"]:
+            env["_EXTRA_CORNER_TCL_FILE"] = self.config["STA_EXTRA_CORNER_TCL_FILE"]
 
         excluded_cells: Set[str] = set(self.config["EXTRA_EXCLUDED_CELLS"] or [])
         excluded_cells.update(process_list_file(self.config["PNR_EXCLUDED_CELL_FILE"]))
@@ -1833,7 +1857,8 @@ class GlobalRouting(OpenROADStep):
 
 
 class _DiodeInsertion(GlobalRouting):
-    id = "DiodeInsertion"
+    id = "OpenROAD.DiodeInsertion"
+    name = "Diode Insertion"
 
     def get_script_path(self):
         return os.path.join(get_script_dir(), "openroad", "antenna_repair.tcl")
@@ -1861,6 +1886,26 @@ class RepairAntennas(CompositeStep):
             return {}, {}
 
         return super().run(state_in, **kwargs)
+
+
+@dataclass
+class NDR:
+    """
+    :param spacing: The spacing of the non-default rule.
+        This can be a single value that applies to all layers, or 'layer' 'spacing' pairs.
+        The single value can be given in µm or a as multiplier, such as `*3`, to multiply the default spacing by 3.
+        Alternatively, pairs can be given as `spacing: [li1, 0.51, met1, 0.42, met2, 0.42, met3, 0.9, met4, 0.9, met5, 4.8]`.
+    :param width: The width of the non-default rule.
+        This can be a single value that applies to all layers, or 'layer' 'width' pairs.
+        The single value can be given in µm or a as multiplier, such as `*3`, to multiply the default width by 3.
+        Alternatively, pairs can be given as `width: [li1, 0.51, met1, 0.42, met2, 0.42, met3, 0.9, met4, 0.9, met5, 4.8]`.
+    :param via: The allowed vias for the non-default rule. If not specified, the default vias will be used.
+        For example: `via: [L1M1_PR_R, M1M2_PR_R, M2M3_PR_R, M3M4_PR_R, M4M5_PR_R]`
+    """
+
+    spacing: List[str]
+    width: List[str]
+    via: Optional[List[str]]
 
 
 @Step.factory.register()
@@ -1918,9 +1963,31 @@ class DetailedRouting(OpenROADStep):
                 deprecated_names=["DRT_ANTENNA_MARGIN"],
             ),
             Variable(
+                "DRT_ANTENNA_REPAIR_JUMPER_ONLY",
+                bool,
+                "Only use jumpers to fix antenna violations. Cannot be used in conjunction with DRT_ANTENNA_REPAIR_DIODE_ONLY.",
+                default=False,
+            ),
+            Variable(
+                "DRT_ANTENNA_REPAIR_DIODE_ONLY",
+                bool,
+                "Only use antenna diodes to fix antenna violations. Cannot be used in conjunction with DRT_ANTENNA_REPAIR_JUMPER_ONLY.",
+                default=False,
+            ),
+            Variable(
                 "DRT_SAVE_DRC_REPORT_ITERS",
                 Optional[int],
                 "Write a DRC report every N iterations. If DRT_SAVE_SNAPSHOTS is enabled, there is an implicit default value of 1.",
+            ),
+            Variable(
+                "NON_DEFAULT_RULES",
+                Optional[dict[str, NDR]],
+                "Specify non-default rules. Can be used to change the width, spacing and vias of a net.",
+            ),
+            Variable(
+                "DRT_ASSIGN_NDR",
+                Optional[dict[str, str]],
+                "Specify which nets should be assigned to which non-default rule. The net name is a regular expression. Use '^name$' to match an exact name.",
             ),
         ]
     )
@@ -2448,6 +2515,12 @@ class CTS(OpenROADStep):
                 Optional[Decimal],
                 "Overrides the maximum transition time CTS characterization will test. If omitted, the slew is extracted from the lib information of the buffers in CTS_CLK_BUFFERS.",
                 units="ns",
+            ),
+            Variable(
+                "CTS_APPLY_NDR",
+                Literal["none", "root_only", "half", "full"],
+                "Applies 2X spacing non-default rule to clock nets except leaf-level nets following some strategy. There are four strategy options: 'none', 'root_only', 'half', 'full'.",
+                default="half",
             ),
         ]
     )

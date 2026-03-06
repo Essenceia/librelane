@@ -93,8 +93,8 @@ class OdbpyStep(Step):
             str(state_in[DesignFormat.ODB]),
         ]
 
-        env["PYTHONPATH"] = (
-            f'{os.path.join(get_script_dir(), "odbpy")}:{env.get("PYTHONPATH")}'
+        env["PYTHONPATH"] = ":".join(
+            (env.get("PYTHONPATH", ""), os.path.join(get_script_dir(), "odbpy"))
         )
         check = False
         if "check" in kwargs:
@@ -696,9 +696,9 @@ class CustomIOPlacement(OdbpyStep):
                 "--config",
                 self.config["IO_PIN_ORDER_CFG"],
                 "--hor-layer",
-                self.config["FP_IO_HLAYER"],
+                self.config["IO_PIN_H_LAYER"],
                 "--ver-layer",
-                self.config["FP_IO_VLAYER"],
+                self.config["IO_PIN_V_LAYER"],
                 "--hor-width-mult",
                 str(self.config["IO_PIN_V_THICKNESS_MULT"]),
                 "--ver-width-mult",

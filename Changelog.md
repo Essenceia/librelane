@@ -1,12 +1,5 @@
 <!--
 
-Formatting the Changelog
-------------------------
-
-* Using Donn's modified version of mdformat:
-
-  nix run .#mdformat -- --wrap 80 --end-of-line lf Changelog.md
-
 Section Order
 -------------
 
@@ -52,20 +45,29 @@ Style Notes
 * `KLayout.DRC`
 
   * Added generic implementation.
-  * Added support for ihp-sg13g2.
+  * Added support for ihp-sg13g2 and ihp-sg13cmos5l.
   * Added support for gf180mcu.
   * Renamed `.xml` to `.lyrdb`.
+
+* `KLayout.Render`
+
+  * Added `KLAYOUT_RENDER_GRID_VISBLE`
+  * Added `KLAYOUT_RENDER_SHOW_RULER`
+  * Added `KLAYOUT_RENDER_BACKGROUND_COLOR`
+  * Added `KLAYOUT_RENDER_TEXT_VISIBLE`
+  * Added `KLAYOUT_RENDER_RESOLUTION`
+  * Added `KLAYOUT_RENDER_OVERSAMPLING`
 
 * Created `KLayout.SealRing`
 
   * Added generic implementation.
   * Added gf180mcu implementation.
-  * Added ihp-sg13g2 implementation.
+  * Added ihp-sg13g2/ihp-sg13cmos5l implementation.
 
 * Created `KLayout.Filler`
 
   * Add generic implementation.
-  * Added ihp-sg13g2 implementation.
+  * Added ihp-sg13g2/ihp-sg13cmos5l implementation.
 
 * Created `KLayout.Density`
 
@@ -77,16 +79,20 @@ Style Notes
 
 * Created `KLayout.LVS`
 
-  * Currently only supports ihp-sg13g2.
+  * Currently only supports ihp-sg13g2/ihp-sg13cmos5l.
 
-* `Netgen.LVS`:
+* `Netgen.LVS`
 
   * Display the top-level Verilog file name.
 
-* `KLayout.StreamOut`: Added `KLAYOUT_CONFLICT_RESOLUTION` which specifies the
-  conflict resolution if a cell name conflict arises. (Default: "RenameCell")
+* `KLayout.StreamOut`
 
-  * Allowed values: "AddToCell", "OverwriteCell", "RenameCell" and "SkipNewCell"
+  * Added `KLAYOUT_CONFLICT_RESOLUTION` which specifies the
+    conflict resolution if a cell name conflict arises. (Default: "RenameCell")
+
+    * Allowed values: "AddToCell", "OverwriteCell", "RenameCell" and "SkipNewCell"
+
+  * Disabled GDS user property production for nets and instances.
 
 * `Magic.*`
 
@@ -104,10 +110,19 @@ Style Notes
 
     * Used to blackbox cells during DRC
 
-* `Magic.SpiceExtraction`: Added `MAGIC_EXT_UNIQUE` to replace
-  `MAGIC_NO_EXT_UNIQUE`
+* `Magic.StreamOut`
 
-  * Allowed values are: "all", "notopports", "noports", "none"
+  * Added `MAGIC_GDS_MERGE` to merge tiles into polygons during gds write (Default: True).
+
+  * Set `MAGIC_DEF_LABELS` to False by default.
+
+* `Magic.SpiceExtraction`:
+
+  * Added `MAGIC_EXT_UNIQUE` to replace `MAGIC_NO_EXT_UNIQUE`
+  
+    * Allowed values are: "all", "notopports", "noports", "none"
+  
+  * Load `CELL_SPICE_MODELS` to annotate stdcell port order
 
 * `Odb.*`
 
@@ -196,6 +211,7 @@ Style Notes
   * Made `CTS_SINK_CLUSTERING_SIZE` and `CTS_SINK_CLUSTERING_MAX_DIAMETER`
     optional. OpenROAD determines the best values.
   * Added `CTS_MACRO_CLUSTERING_SIZE` and `CTS_MACRO_CLUSTERING_MAX_DIAMETER`.
+  * Added `CTS_APPLY_NDR` to set the non-default rule strategy.
 
 * `OpenROAD.CutRows`
 
@@ -216,6 +232,10 @@ Style Notes
   * Removed `DRT_MIN_LAYER` and `DRT_MAX_LAYER` due to an update in OpenROAD.
     `RT_MIN_LAYER`/`RT_MAX_LAYER`/`RT_CLOCK_MIN_LAYER`/`RT_CLOCK_MAX_LAYER` is
     considered instead.
+  * Added `DRT_ANTENNA_REPAIR_JUMPER_ONLY`.
+  * Added `DRT_ANTENNA_REPAIR_DIODE_ONLY`.
+  * Added `NON_DEFAULT_RULES` to specify non-default rules.
+  * Added `DRT_ASSIGN_NDR` to assign nets to non-default rules.
 
 * Created `OpenROAD.DumpRCValues`
 
@@ -289,6 +309,10 @@ Style Notes
 
   * Renamed `GRT_ANTENNA_MARGIN` to `GRT_ANTENNA_REPAIR_MARGIN`.
 
+  * Added `GRT_ANTENNA_REPAIR_JUMPER_ONLY`.
+
+  * Added `GRT_ANTENNA_REPAIR_DIODE_ONLY`.
+
 * `OpenROAD.RepairDesignPostGPL`
 
   * Added optional variable `DESIGN_REPAIR_MAX_UTIL_PCT`
@@ -358,6 +382,25 @@ Style Notes
     with older designs. See https://github.com/YosysHQ/yosys/pull/5095 for more
     info.
 
+  * Folded `SYNTH_ELABORATE_FLATTEN` into `SYNTH_HIERARCHY_MODE` with new
+    translation behavior, i.e.
+
+    * `SYNTH_ELABORATE_FLATTEN` is true: set to `flatten`
+
+    * `SYNTH_ELABORATE_FLATTEN` is false: set to `keep`
+
+  * Integrated new `clockgate` command
+
+    * Replaces Lighter: `USE_LIGHTER` now translates to the new variable
+      `SYNTH_CLOCKGATE_MIN_WIDTH` which can be an integer value for a certain
+      width of flip-flops to convert to clockgates or `None` to disable
+      clock-gating entirely.
+
+  * Added two new PDK variables: `SYNTH_CLOCKGATE_{POS,NEG}EDGE_ICG`: used to
+    identify appropriate ICG
+
+    * Removed `LIGHTER_DFF_MAP`: tangentially related to above
+
 * `Yosys.Synthesis`
 
   * Graphviz DOT file generation, which frequently fails and brings down the
@@ -384,11 +427,16 @@ Style Notes
     * `SYNTH_KEEP_HIERARCHY_MODULES`: A list of modules for which to set the
       `keep_hierarchy` attribute.
 
+* Created `Magic.RCX`
+
+  * Performs full post-layout parasitics extraction using Magic
+
 ## Flows
 
 * Classic
 
   * Added `OpenROAD.DumpRCValues` immediately after floorplanning.
+  * Added `KLayout.Render` after both stream-out steps.
 
 * Created "Chip" flow
 
@@ -400,29 +448,66 @@ Style Notes
 
 * Python requirement bumped up to ≥3.10
   * Does not affect Nix users where Python 3.12 is used anyway.
-* Updated nix-eda to 6.0.1
+* Updated nix-eda to 6.4.0
   * Updated nixpkgs to nixos-25.11 (@ `b3aad46`)
-  * Updated KLayout to `0.30.4`
-  * Updated Magic to `8.3.581`
-  * Updated Netgen to `1.5.308`
-  * Updated Yosys to `0.60`
+  * Updated KLayout to `0.30.6`
+  * Updated Magic to `8.3.610`
+  * Updated Netgen to `1.5.316`
+  * Updated Yosys to `0.62`
     * Replaced Synlig with [Slang](https://github.com/povik/yosys-slang)
-  * Updated Verilator to `5.042`
-* Updated OpenROAD to `341650e`
-* Updated OpenSTA to `ffabd65`
+  * Updated Verilator to `5.044`
+* Updated OpenROAD to `dcf36133`
+* Updated OpenSTA to `857316ff`
+* Nix
+  * `librelane` derivation:
+    * Added new arguments `yosys-plugin-set` and `extra-yosys-plugins`
+    * Added new argument `extra-python-interpreter-packages` for Python
+      interpreters built into tools e.g. yosys, openroad, takes a lambda similar
+      to `python.withPackages` (click and pyyaml will always be included)
+  * `createOpenLaneShell` has been reworked into `pkgs.librelane-shell`,
+    which is a derivation supporting `.override` in comparison to
+    `createOpenLaneShell` which is a function returning a function that creates
+    a derivation:
+    ```nix
+    # before (librelane 2.4)
+    devShells.x86_64-linux.default = pkgs.callPackage (librelane.createOpenLaneShell {
+      extra-packages = with pkgs; [quaigh python3.pkgs.nl2bench];
+      extra-python-packages = with pkgs.python3.pkgs; [bitarray marshmallow-dataclass];
+      librelane-plugins = with pkgs.python3.pkgs; [librelane-plugin-difetto];
+    }) {};
+    # now
+    devShells.x86_64-linux.default = pkgs.librelane-shell.override {
+      extra-packages = with pkgs; [quaigh python3.pkgs.nl2bench];
+      librelane-extra-python-interpreter-packages = ps: with ps; [bitarray marshmallow-dataclass];
+      librelane-plugins = ps: with ps; [librelane-plugin-difetto];
+    };
+    ```
+      * `extra-python-packages` and `librelane-plugins` now take a lambda like
+        `python.withPackages`
+      * Added new arguments `librelane-extra-python-interpreter-packages` and
+        `librelane-extra-yosys-plugins`, which overrides the two relevant
+        arguments in the `librelane` derivation used by this shell.
 
 ## Testing
 
-* Step unit tests now load the PDK configs first before overriding them. This
-  has a minor performance penalty compared to the previous "raw" load, but
-  allows unit tests to be updated less frequently (especially to work with new
-  PDK variables.)
+* Custom pytest `--step-rx` option replaced with a proper pytest marker,
+  `step_impl_tests`.
+  * Default option uses the marker `no step_impl_tests`, i.e., all other tests.
+  * To run all tests, pass `-m all`.
+
+* Step implementation tests now load the PDK configs first before overriding
+  them. This has a minor performance penalty compared to the previous "raw"
+  load, but allows unit tests to be updated less frequently (especially to work
+  with new PDK variables.)
 
 ## Misc. Enhancements/Bugfixes
 
 - Added `--pad` and `PAD_CELL_LIBRARY` variable to load the pad configuration
 
 * `CLI`
+
+  * Multiple initial state JSON files can now be provided which are combined to
+    form the initial state for the flow.
 
   * Paths provided over the terminal that start with a tilde are now rejected
     and result in an error, as they typically mean POSIX shell tilde expansion
@@ -475,8 +560,13 @@ Style Notes
 
 * `librelane.steps`
 
-  * TclStep
+  * `TclStep`
     * All `Decimal` values are now passed to Tcl in exponent notation.
+
+  * `PyosysStep`, `OdbpyStep`
+    * LibreLane's `scripts/{pyosys,odbpy}` directory is now always suffixed to
+      `PYTHONPATH` so external steps can import `ys_common` or `reader`
+      respectively.
 
 * `librelane.config`
 
@@ -485,6 +575,8 @@ Style Notes
       `Checker.WireLength`
     * `GPIO_PAD_*` removed- no step currently uses them
     * `FP_TRACKS_INFO`, `FP_TAPCELL_DIST` moved to relevant steps
+    * `FP_IO_HLAYER` and `FP_IO_VLAYER` renamed to `IO_PIN_{H,V}_LAYER` and
+      moved to relevant steps
     * `FILL_CELL` and `DECAP_CELL` renamed to `FILL_CELLS` and `DECAP_CELLS` as
       they are both lists
     * `EXTRA_GDS_FILES` and `FALLBACK_SDC_FILE` renamed to `EXTRA_GDS` and
@@ -506,6 +598,10 @@ Style Notes
 * global connections: due to an update in OpenROAD, global connections are not
   overriden by default. To match the old behavior as much as possible we now
   create the `PDN_MACRO_CONNECTIONS` before the SCL connections.
+
+* `from_magic_feedback`
+
+  * Added "-" to wordchars so that a string like "box 369787 -1 369789 1" would be correctly split.
 
 ## API Breaks
 
@@ -534,6 +630,10 @@ Style Notes
     that have hold violations at non-typical corners to set its value explicitly
     to `["*tt*"]`.
 
+* `CVCRV.ERC`
+
+  * Removed non-functional step.
+
 * `KLayout.StreamOut` now behaves differently as the default for cell conflict
   resolution has been changed from "AddToCell" to "RenameCell", which is a
   safer.
@@ -542,6 +642,10 @@ Style Notes
     "AddToCell".
   * It may be necessary to set `KLAYOUT_CONFLICT_RESOLUTION` to "SkipNewCell" to
     match the old macro integration behavior of magic.
+
+* `Magic.StreamOut`
+
+  * `MAGIC_DEF_LABELS` now defaulting to False.
 
 * `Odb.AddRoutingObstructions`, `Odb.AddPDNObstructions`
 
@@ -555,6 +659,10 @@ Style Notes
     description of the new format.
   * `VIAS_RC` removed and replaced by `VIAS_R` with a format similar to
     `LAYERS_RC`.
+
+* `OpenROAD.BasicMacroPlacement`
+
+  * Removed non-functional step.
 
 * `OpenROAD.GeneratePDN`
 
@@ -578,6 +686,8 @@ Style Notes
 
   * `TclStep` now uses the IDs uppercased for `CURRENT_` and `SAVE_`.
 
+  * `OdbpyStep`: `scripts/odbpy` is now suffixed instead of prefixed.
+
 * `openlane.state`
 
   * `State` no longer includes all `DesignFormat`s as guaranteed keys and `.get`
@@ -596,8 +706,12 @@ Style Notes
   * `meta.substituting_steps` now only apply to the sequential flow declared in
     `meta.flow` and not all flows.
 
-  * `WIRE_LENGTH_THRESHOLD`, `GPIO_PAD_*`, `FP_TRACKS_INFO`, `FP_TAPCELL_DIST`
-    are no longer global variables.
+  * PDK/SCL variables `WIRE_LENGTH_THRESHOLD`, `GPIO_PAD_*`, `FP_TRACKS_INFO`,
+    `FP_TAPCELL_DIST`, `FP_IO_HLAYER`, `FP_IO_VLAYER`, `SIGNAL_WIRE_RC_LAYERS`,
+    and `CLOCK_WIRE_RC_LAYERS` are no longer global variables and have been
+    moved to relevant steps.
+
+  * Global SCL variable `VDD_PIN_VOLTAGE` has been removed.
 
   * `FILL_CELL`, `DECAP_CELL`, `EXTRA_GDS_FILES`, `FALLBACK_SDC_FILE` were all
     renamed, see Misc. Enhancements/Bugfixes.
@@ -609,18 +723,63 @@ Style Notes
 
 * Nix
 
-  * `createOpenLaneShell` has been renamed `createLibreLaneShell` and is now in
-    pkgs rather than the flake top-level (which is quite unorthodox.)
+  * `createOpenLaneShell` has been reworked into `pkgs.librelane-shell`,
+    which is a derivation supporting `.override` in comparison to
+    `createOpenLaneShell` which is a function returning a function that creates
+    a derivation. See Tool Updates for more information on usage.
+
 
 ## Documentation
 
 * Variable types now link to dataclasses' API reference as appropriate.
 
+# 2.4.13
+
+## Misc. Enhancements/Bugfixes
+
+* Fix loading states if a DesignFormat is a list.
+
+# 2.4.12
+
+## Steps
+
+* `Yosys.VHDLSynthesis`
+
+  * Added `GHDL_ARGUMENTS` to provide arguments to ghdl-yosys, such as `--std=08`.
+
+# 2.4.11
+
+## Steps
+
+* `Yosys.*Synthesis`
+
+  * Removed misleading nonfunctional clock delay propagation to ABC scripts
+    pending further investigations.
+
+## Misc. Enhancements/Bugfixes
+
+* Fixed copyright information.
+
+# 2.4.10
+
+## Misc. Enhancements/Bugfixes
+
+* Fixed `common/cli.py` and `pyproject.toml` so click versions 8.2 and higher
+  are supported.
+
+# 2.4.9
+
+## Steps
+
+* `KLayout.OpenGUI`
+
+  * Fixed the technology not being registered.
+
 # 2.4.8
 
 ## Misc. Enhancements/Bugfixes
 
-* Change `strip()` on subprocess logs to `rstrip()` to prevent misformatting of
+* Changed `strip()` on subprocess logs to `rstrip()` to prevent misformatting of
   tables and other elements.
 
 # 2.4.7

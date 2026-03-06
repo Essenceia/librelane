@@ -30,10 +30,45 @@ proc drt_run {i args} {
 source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
 read_current_odb
 
-# We need to call grt once, so that options like allow_congestion can be set for repair_antennas.
-# This needs to be done before drt. If grt is called after drt, repair_antennas only uses the
-# routing information from grt for fixing the antennas = useless.
-source $::env(SCRIPTS_DIR)/openroad/common/grt.tcl
+# Create NDRs
+if { [info exists ::env(NON_DEFAULT_RULES)] } {
+    dict for {ndr_name values} $::env(NON_DEFAULT_RULES) {
+        puts "Creating NDR for $ndr_name:"
+        dict with values {
+            puts "  width: $width"
+            puts "  spacing: $spacing"
+            puts "  via: $via"
+
+            if {$via eq "None"} {
+                create_ndr -name $ndr_name \
+                    -width $width \
+                    -spacing $spacing
+            } else {
+                create_ndr -name $ndr_name \
+                    -width $width \
+                    -spacing $spacing \
+                    -via $via
+            }
+        }
+    }
+}
+
+# Assign NDRs to nets
+if { [info exists ::env(DRT_ASSIGN_NDR)] } {
+    dict for {net_regex ndr_name} $::env(DRT_ASSIGN_NDR) {
+        puts "\[INFO\] Assigning NDR '$ndr_name' to nets matching '$net_regex'"
+        if { $net_regex != {^$} } {
+            set odb_nets [$::block getNets]
+            foreach net $odb_nets {
+                set net_name [odb::dbNet_getName $net]
+                if { [regexp "$net_regex" $net_name full] } {
+                    puts "\[INFO\] Net '$net_name' matched '$net_regex', assigning NDR '$ndr_name'…"
+                    assign_ndr -ndr $ndr_name -net $net_name
+                }
+            }
+        }
+    }
+}
 
 set_thread_count $::env(DRT_THREADS)
 
@@ -65,10 +100,18 @@ if { ![info exists ::env(DIODE_CELL)] } {
 } else {
     set diode_cell [lindex [split $::env(DIODE_CELL) "/"] 0]
 
+    set arg_list [list]
+    lappend arg_list $diode_cell
+    lappend arg_list -ratio_margin $::env(GRT_ANTENNA_REPAIR_MARGIN)
+    append_if_flag arg_list GRT_ALLOW_CONGESTION -allow_congestion
+    append_if_flag arg_list DRT_ANTENNA_REPAIR_JUMPER_ONLY -jumper_only
+    append_if_flag arg_list DRT_ANTENNA_REPAIR_DIODE_ONLY -diode_only
+
     while {$i <= $::env(DRT_ANTENNA_REPAIR_ITERS) && [log_cmd check_antennas]} {
         puts "\[INFO\] Running antenna repair iteration $i…"
-        set diodes_inserted [log_cmd repair_antennas $diode_cell -ratio_margin $::env(DRT_ANTENNA_REPAIR_MARGIN)]
-        if {$diodes_inserted} {
+        set diodes_inserted [log_cmd repair_antennas {*}$arg_list]
+        
+        if {$diodes_inserted || $::env(DRT_ANTENNA_REPAIR_JUMPER_ONLY)} {
             drt_run $i {*}$drt_args
         } else {
             puts "\[INFO\] No diodes inserted. Ending antenna repair iterations."

@@ -42,9 +42,9 @@
   openroad,
   buildPythonEnvForInterpreter,
   # top
-  rev ? "dfc4f595dfb2e1c346492ff1f0274abb28725acf",
-  rev-date ? "2026-01-06",
-  sha256 ? "sha256-CVsWiOIYJSei2ur7KPlFu5CfLv3CBhvVSnzoAcKJNhs=",
+  rev ? "dcf36133a369abc8f3c5e5738cd4d82e4903c0e0",
+  rev-date ? "2026-02-17",
+  sha256 ? "sha256-E9UVTgCfr/k5DnbJ2H2w+wFAzr1eNfooVi1jj8Vz4w4=",
   # tests tend to time out and fail, esp on Darwin. imperatively it's easy to
   # re-run them but in Nix it starts the long compile all over again.
   enableTesting ? false,
@@ -55,7 +55,7 @@ let
     "-DTCL_LIBRARY=${tcl}/lib/libtcl${stdenv.hostPlatform.extensions.sharedLibrary}"
     "-DTCL_HEADER=${tcl}/include/tcl.h"
     "-DUSE_SYSTEM_BOOST:BOOL=ON"
-    "-DCMAKE_CXX_FLAGS=-DBOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=1 -I${eigen}/include/eigen3 ${lib.strings.optionalString debug "-g -O0"}"
+    "-DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DBOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED=1 -I${eigen}/include/eigen3 ${lib.strings.optionalString debug "-g -O0"}"
     "-DCUDD_LIB=${cudd}/lib/libcudd.a"
   ];
   join_flags = lib.strings.concatMapStrings (x: " \"${x}\" ");
@@ -85,7 +85,7 @@ stdenv.mkDerivation (finalAttrs: {
     substituteInPlace ./cmake/GetGitRevisionDescription.cmake\
       --replace-fail "GITDIR-NOTFOUND" "${rev}"
     patchShebangs ./etc
-    
+
     sed -i 's@cmake -B@cmake ${join_flags finalAttrs.cmakeFlags} -B@' ./etc/Env.sh
     echo "#!/bin/bash" > ./openroad.build_env_info
     echo "cat << EOF" >> ./openroad.build_env_info
@@ -134,7 +134,8 @@ stdenv.mkDerivation (finalAttrs: {
     llvmPackages.clang-tools
     python3.pkgs.tclint
     ctestCheckHook
-  ] ++ lib.optionals stdenv.isDarwin [
+  ]
+  ++ lib.optionals stdenv.isDarwin [
     darwin.DarwinTools # sw_vers
   ];
 

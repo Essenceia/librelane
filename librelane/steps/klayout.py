@@ -174,12 +174,58 @@ class Render(KLayoutStep):
     inputs = [DesignFormat.DEF]
     outputs = []
 
+    config_vars = KLayoutStep.config_vars + [
+        Variable(
+            "KLAYOUT_RENDER_GRID_VISBLE",
+            bool,
+            "Render the grid in the image.",
+            default=False,
+        ),
+        Variable(
+            "KLAYOUT_RENDER_SHOW_RULER",
+            bool,
+            "Enable the ruler in the image.",
+            default=False,
+        ),
+        Variable(
+            "KLAYOUT_RENDER_BACKGROUND_COLOR",
+            Literal["white", "black"],
+            "The background color of the image.",
+            default="white",
+        ),
+        Variable(
+            "KLAYOUT_RENDER_TEXT_VISIBLE",
+            bool,
+            "Enable text in the image.",
+            default=False,
+        ),
+        Variable(
+            "KLAYOUT_RENDER_RESOLUTION",
+            int,
+            "The horizontal resolution of the image in pixel.",
+            default=1000,
+        ),
+        Variable(
+            "KLAYOUT_RENDER_OVERSAMPLING",
+            int,
+            "The oversampling factor (1..3), or 0 for disabling oversampling.",
+            default=0,
+        ),
+    ]
+
     def run(self, state_in: State, **kwargs) -> Tuple[ViewsUpdate, MetricsUpdate]:
+        views_updates: ViewsUpdate = {}
+
         input_view = state_in[DesignFormat.DEF]
         if gds := state_in.get(DesignFormat.GDS):
             input_view = gds
 
         assert isinstance(input_view, Path)
+
+        klayout_render = os.path.join(
+            self.step_dir,
+            f"{self.config['DESIGN_NAME']}.{DesignFormat.KLAYOUT_RENDER.extension}",
+        )
 
         self.run_pya_script(
             [
@@ -187,13 +233,27 @@ class Render(KLayoutStep):
                 os.path.join(get_script_dir(), "klayout", "render.py"),
                 abspath(input_view),
                 "--output",
-                abspath(os.path.join(self.step_dir, "out.png")),
+                abspath(klayout_render),
+                "--grid-visible",
+                self.config["KLAYOUT_RENDER_GRID_VISBLE"],
+                "--grid-show-ruler",
+                self.config["KLAYOUT_RENDER_SHOW_RULER"],
+                "--text-visible",
+                self.config["KLAYOUT_RENDER_TEXT_VISIBLE"],
+                "--background-color",
+                self.config["KLAYOUT_RENDER_BACKGROUND_COLOR"],
+                "--resolution",
+                self.config["KLAYOUT_RENDER_RESOLUTION"],
+                "--oversampling",
+                self.config["KLAYOUT_RENDER_OVERSAMPLING"],
             ]
             + self.get_cli_args(include_lefs=True),
             silent=True,
         )
 
-        return {}, {}
+        views_updates[DesignFormat.KLAYOUT_RENDER] = Path(klayout_render)
+
+        return views_updates, {}
 
 
 @Step.factory.register()
@@ -413,7 +473,7 @@ class DRC(KLayoutStep):
             metrics_updates = self.run_sky130(state_in, **kwargs)
         elif self.config["PDK"] in ["gf180mcuA", "gf180mcuB", "gf180mcuC", "gf180mcuD"]:
             metrics_updates = self.run_gf180mcu(state_in, **kwargs)
-        elif self.config["PDK"] in ["ihp-sg13g2"]:
+        elif self.config["PDK"] in ["ihp-sg13g2", "ihp-sg13cmos5l"]:
             metrics_updates = self.run_ihp_sg13g2(state_in, **kwargs)
         else:
             metrics_updates = self.run_generic(state_in, **kwargs)
@@ -821,7 +881,7 @@ class LVS(KLayoutStep):
     def run(self, state_in: State, **kwargs) -> Tuple[ViewsUpdate, MetricsUpdate]:
         metrics_updates: MetricsUpdate = {}
         views_updates: ViewsUpdate = {}
-        if self.config["PDK"] in ["ihp-sg13g2"]:
+        if self.config["PDK"] in ["ihp-sg13g2", "ihp-sg13cmos5l"]:
             views_updates, metrics_updates = self.run_ihp_sg13g2(state_in, **kwargs)
         else:
             self.warn(
@@ -855,7 +915,7 @@ class SealRing(KLayoutStep):
     def run(self, state_in: State, **kwargs) -> Tuple[ViewsUpdate, MetricsUpdate]:
         metrics_updates: MetricsUpdate = {}
         views_updates: ViewsUpdate = {}
-        if self.config["PDK"] in ["ihp-sg13g2"]:
+        if self.config["PDK"] in ["ihp-sg13g2", "ihp-sg13cmos5l"]:
             views_updates, metrics_updates = self.run_ihp_sg13g2(state_in, **kwargs)
         else:
             views_updates, metrics_updates = self.run_generic(state_in, **kwargs)
@@ -933,13 +993,13 @@ class SealRing(KLayoutStep):
                 "-zz",
                 "-nc",
                 "-n",
-                "sg13g2",
+                self.config["PDK"].replace("ihp-", ""),
                 "-r",
                 script,
                 "-rd",
-                f"width={self.config['DIE_AREA'][2]:f}",
+                f"width={self.config['DIE_AREA'][3]:f}",
                 "-rd",
-                f"height={self.config['DIE_AREA'][3]:f}",
+                f"height={self.config['DIE_AREA'][2]:f}",
                 "-rd",
                 f"input={abspath(input_gds)}",
                 "-rd",
@@ -983,7 +1043,14 @@ class Filler(KLayoutStep):
     def run(self, state_in: State, **kwargs) -> Tuple[ViewsUpdate, MetricsUpdate]:
         metrics_updates: MetricsUpdate = {}
         views_updates: ViewsUpdate = {}
-        if self.config["PDK"] in ["ihp-sg13g2"]:
+
+        if not self.config["KLAYOUT_FILLER_SCRIPT"]:
+            self.warn(
+                f"KLAYOUT_FILLER_SCRIPT is unset. KLayout.Filler may not be supported for the {self.config['PDK']} PDK. This step will be skipped."
+            )
+            return views_updates, metrics_updates
+
+        if self.config["PDK"] in ["ihp-sg13g2", "ihp-sg13cmos5l"]:
             views_updates, metrics_updates = self.run_ihp_sg13g2(state_in, **kwargs)
         else:
             views_updates, metrics_updates = self.run_generic(state_in, **kwargs)
@@ -995,12 +1062,6 @@ class Filler(KLayoutStep):
     ) -> Tuple[ViewsUpdate, MetricsUpdate]:
         views_updates: ViewsUpdate = {}
         kwargs, env = self.extract_env(kwargs)
-
-        if not self.config["KLAYOUT_FILLER_SCRIPT"]:
-            self.warn(
-                f"KLAYOUT_FILLER_SCRIPT is unset. KLayout.Filler may not be supported for the {self.config['PDK']} PDK. This step will be skipped."
-            )
-            return views_updates, {}
 
         input_gds = state_in[DesignFormat.GDS]
         assert isinstance(input_gds, Path)
