@@ -2996,7 +2996,7 @@ class AddDFTScanChain(OpenROADStep):
 
     id = "OpenROAD.AddDFTScanChain"
     name = "Add DFT Scan Chain"
-    inputs = []
+    inputs = [DesignFormat.NETLIST]
 
     def get_script_path(self) -> str:
         return os.path.join(get_script_dir(), "openroad", "dft", "add_scan_chain.tcl")
