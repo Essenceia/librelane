@@ -2986,3 +2986,19 @@ class DumpRCValues(OpenROADStep):
 
     def get_script_path(self) -> str:
         return os.path.join(get_script_dir(), "openroad", "dump_rc.tcl")
+
+
+@Step.factory.register()
+class AddDFTScanChain(OpenROADStep):
+    """
+    Insert a DFT Scan chain.
+    """
+
+    id = "OpenROAD.AddDFTScanChain"
+    name = "Add DFT Scan Chain"
+    inputs = []
+
+    def get_script_path(self) -> str:
+        return os.path.join(get_script_dir(), "openroad", "dft", "add_scan_chain.tcl")
+
+

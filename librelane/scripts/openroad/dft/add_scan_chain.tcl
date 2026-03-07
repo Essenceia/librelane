@@ -2,7 +2,6 @@ source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
 source $::env(SCRIPTS_DIR)/openroad/dft/utils.tcl 
 source $::env(SCRIPTS_DIR)/openroad/dft/helper.tcl
 
-read_current_odb
 
 read_current_netlist
 

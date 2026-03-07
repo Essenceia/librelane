@@ -49,6 +49,7 @@ class Classic(SequentialFlow):
         Checker.NetlistAssignStatements,
         OpenROAD.CheckSDCFiles,
         OpenROAD.CheckMacroInstances,
+        OpenROAD.AddDFTScanChain,
         OpenROAD.STAPrePNR,
         OpenROAD.Floorplan,
         OpenROAD.DumpRCValues,
