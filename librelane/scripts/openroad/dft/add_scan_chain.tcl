@@ -2,6 +2,8 @@ source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
 source $::env(SCRIPTS_DIR)/openroad/dft/utils.tcl 
 source $::env(SCRIPTS_DIR)/openroad/dft/helper.tcl
 
+read_pnr_libs
+read_lefs
 read_current_netlist
 
 set_dft_config -max_chains 1 -clock_mixing no_mix \
