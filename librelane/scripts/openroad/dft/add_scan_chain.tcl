@@ -7,9 +7,9 @@ read_lefs
 read_current_netlist
 
 set_dft_config -max_chains 1 -clock_mixing no_mix \
--scan_enable_name_pattern {$::env(DESIGN_NAME).ff_sc_en*} \
--scan_in_name_pattern     {$::env(DESIGN_NAME).ff_sc_tdi*} \
--scan_out_name_pattern    {$::env(DESIGN_NAME).ff_sc_tdo*}  
+-scan_enable_name_pattern {*ff_sc_en*} \
+-scan_in_name_pattern     {*ff_sc_tdi*} \
+-scan_out_name_pattern    {*ff_sc_tdo*}  
 
 set existing_dont_touch [report_dont_touch]
 
