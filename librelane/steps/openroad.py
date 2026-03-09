@@ -3025,3 +3025,17 @@ class AddDFTScanChain(OpenROADStep):
         return os.path.join(get_script_dir(), "openroad", "dft", "add_scan_chain.tcl")
 
 
+@Step.factory.register()
+class OptDFTScanChain(OpenROADStep):
+    """
+    Optimize the DFT Scan chain, minimize wire delay.
+    """
+
+    id = "OpenROAD.OptDFTScanChain"
+    name = "Opt DFT Scan Chain"
+    inputs = [DesignFormat.ODB]
+
+    def get_script_path(self) -> str:
+        return os.path.join(get_script_dir(), "openroad", "dft", "opt_scan_chain.tcl")
+
+
