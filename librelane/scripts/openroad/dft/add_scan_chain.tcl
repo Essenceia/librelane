@@ -7,16 +7,15 @@ read_lefs
 read_current_netlist
 
 set_dft_config -max_chains 1 -clock_mixing no_mix \
--scan_enable_name_pattern {*ff_sc_en*} \
--scan_in_name_pattern     {*ff_sc_tdi*} \
--scan_out_name_pattern    {*ff_sc_tdo*}  
+-scan_enable_name_pattern $::env(DFT_SCAN_EN_PORT) \
+-scan_in_name_pattern     $::env(DFT_SCAN_TDI_PORT) \
+-scan_out_name_pattern    $::env(DFT_SCAN_TDO_PORT)  
 
 set existing_dont_touch [report_dont_touch]
 
 # set don't touch on everything connected to jtag clk since it will be used
 # to driver dft ff verif
-set jtag_clk_name [lindex $::env(CLOCK_PORT) 1]
-set jtag_clk [get_clock $jtag_clk_name] 
+set jtag_clk [get_clock $::env(JTAG_CLOCK_NAME)] 
 exclude_from_scan_chain $jtag_clk
 
 add_scan_chain

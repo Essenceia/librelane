@@ -2998,6 +2998,29 @@ class AddDFTScanChain(OpenROADStep):
     name = "Add DFT Scan Chain"
     inputs = [DesignFormat.NETLIST]
 
+    config_vars = OpenROADStep.config_vars + [
+        Variable(
+                "DFT_SCAN_TDI_PORT",
+                str,
+                "DFT scan chain TDI port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_TDO_PORT",
+                str,
+                "DFT scan chain TDO port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_EN_PORT",
+                str,
+                "DFT scan chain enable port name in design"
+        ),
+       Variable(
+                "JTAG_CLOCK_NAME",
+                str,
+                "Name of JTAG clock, all ff in this clock domain will be excluded from scan chain"
+        )
+    ]
+
     def get_script_path(self) -> str:
         return os.path.join(get_script_dir(), "openroad", "dft", "add_scan_chain.tcl")
 
