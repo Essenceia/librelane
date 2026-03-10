@@ -12,8 +12,6 @@
   libparse,
   magic-vlsi,
   netgen,
-  opensta,
-  openroad,
   ruby,
   tcl,
   tclPackages,
@@ -68,7 +66,6 @@ let
   yosys-env =
     (yosys.withPythonPackages.override { target = yosys-with-plugins; })
       python-interpreter-packages;
-  openroad-env = openroad.withPythonPackages python-interpreter-packages;
   self = buildPythonPackage {
     pname = "librelane";
     version = (builtins.fromTOML (builtins.readFile ./pyproject.toml)).project.version;
@@ -81,9 +78,7 @@ let
     ];
 
     includedTools = lib.map lib.getBin [
-      opensta
       yosys-env
-      openroad-env
       netgen
       magic-vlsi
       klayout-app
