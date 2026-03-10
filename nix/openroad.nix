@@ -42,9 +42,9 @@
   openroad,
   buildPythonEnvForInterpreter,
   # top
-  rev ? "dcf36133a369abc8f3c5e5738cd4d82e4903c0e0",
-  rev-date ? "2026-02-17",
-  sha256 ? "sha256-E9UVTgCfr/k5DnbJ2H2w+wFAzr1eNfooVi1jj8Vz4w4=",
+  rev ? "8697e0fd7bade5153b285b8faf3f8fbdc067653b",
+  rev-date ? "2026-03-10",
+  sha256 ? "sha256-WB5VKvj39z9NEsMdw9uHFtZe8xdxzo+rEdnaio3U2NU=",
   # tests tend to time out and fail, esp on Darwin. imperatively it's easy to
   # re-run them but in Nix it starts the long compile all over again.
   enableTesting ? false,
@@ -67,7 +67,7 @@ stdenv.mkDerivation (finalAttrs: {
   version = rev-date;
 
   src = fetchFromGitHub {
-    owner = "The-OpenROAD-Project";
+    owner = "Essenceia";
     repo = "OpenROAD";
     inherit rev;
     inherit sha256;
