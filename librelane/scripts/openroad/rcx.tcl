@@ -12,18 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
-
-puts  "UwU" 
-
-proc print_all_inst_name { } {
-        set i [[ord::get_db_block] getInsts]
-        foreach x $i { puts [$x getName] }
-}
-
-print_all_inst_name 
-
 read_lefs "RCX_LEF"
-read_current_netlist
 read_def $::env(CURRENT_DEF)
 set_global_vars
 
