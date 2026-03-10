@@ -67,6 +67,7 @@ class Classic(SequentialFlow):
         Odb.CustomIOPlacement,
         Odb.ApplyDEFTemplate,
         OpenROAD.GlobalPlacement,
+        OpenROAD.OptDFTScanChain,
         Odb.WriteVerilogHeader,
         Checker.PowerGridViolations,
         OpenROAD.STAMidPNR,

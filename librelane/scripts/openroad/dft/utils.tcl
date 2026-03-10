@@ -33,7 +33,7 @@ proc add_scan_chain { } {
 
 	report_dft_plan -verbose 
 
-	execute_dft_plan 
+#	execute_dft_plan 
 
 }
 
