@@ -3014,7 +3014,12 @@ class AddDFTScanChain(OpenROADStep):
                 str,
                 "DFT scan chain enable port name in design"
         ),
-       Variable(
+        Variable(
+                "DFT_MAX_LENGTH",
+                int,
+                "DFT max scan length"
+        ),       
+        Variable(
                 "JTAG_CLOCK_NAME",
                 str,
                 "Name of JTAG clock, all ff in this clock domain will be excluded from scan chain"
@@ -3051,7 +3056,12 @@ class OptDFTScanChain(OpenROADStep):
                 str,
                 "DFT scan chain enable port name in design"
         ),
-       Variable(
+        Variable(
+                "DFT_MAX_LENGTH",
+                int,
+                "DFT max scan length"
+        ),
+        Variable(
                 "JTAG_CLOCK_NAME",
                 str,
                 "Name of JTAG clock, all ff in this clock domain will be excluded from scan chain"

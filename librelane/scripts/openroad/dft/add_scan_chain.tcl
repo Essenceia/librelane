@@ -6,10 +6,13 @@ read_pnr_libs
 read_lefs
 read_current_netlist
 
-set_dft_config -max_chains 1 -clock_mixing no_mix \
+set_dft_config -max_chains 1 -clock_mixing clock_mix \
+-max_length $::env(DFT_MAX_LENGTH) \
 -scan_enable_name_pattern $::env(DFT_SCAN_EN_PORT) \
 -scan_in_name_pattern     $::env(DFT_SCAN_TDI_PORT) \
 -scan_out_name_pattern    $::env(DFT_SCAN_TDO_PORT)  
+
+report_dft_config
 
 set existing_dont_touch [report_dont_touch]
 
