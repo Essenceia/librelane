@@ -3005,3 +3005,90 @@ class DumpRCValues(OpenROADStep):
 
     def get_script_path(self) -> str:
         return os.path.join(get_script_dir(), "openroad", "dump_rc.tcl")
+
+
+@Step.factory.register()
+class AddDFTScanChain(OpenROADStep):
+    """
+    Insert a DFT Scan chain.
+    """
+
+    id = "OpenROAD.AddDFTScanChain"
+    name = "Add DFT Scan Chain"
+    inputs = [DesignFormat.NETLIST]
+
+    config_vars = OpenROADStep.config_vars + [
+        Variable(
+                "DFT_SCAN_TDI_PORT",
+                str,
+                "DFT scan chain TDI port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_TDO_PORT",
+                str,
+                "DFT scan chain TDO port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_EN_PORT",
+                str,
+                "DFT scan chain enable port name in design"
+        ),
+        Variable(
+                "DFT_MAX_LENGTH",
+                int,
+                "DFT max scan length"
+        ),       
+        Variable(
+                "JTAG_CLOCK_NAME",
+                str,
+                "Name of JTAG clock, all ff in this clock domain will be excluded from scan chain"
+        )
+    ]
+
+    def get_script_path(self) -> str:
+        return os.path.join(get_script_dir(), "openroad", "dft", "add_scan_chain.tcl")
+
+
+@Step.factory.register()
+class OptDFTScanChain(OpenROADStep):
+    """
+    Optimize the DFT Scan chain, minimize wire delay.
+    """
+
+    id = "OpenROAD.OptDFTScanChain"
+    name = "Opt DFT Scan Chain"
+    inputs = [DesignFormat.ODB]
+
+    config_vars = OpenROADStep.config_vars + [
+        Variable(
+                "DFT_SCAN_TDI_PORT",
+                str,
+                "DFT scan chain TDI port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_TDO_PORT",
+                str,
+                "DFT scan chain TDO port name in design"
+        ),
+        Variable(
+                "DFT_SCAN_EN_PORT",
+                str,
+                "DFT scan chain enable port name in design"
+        ),
+        Variable(
+                "DFT_MAX_LENGTH",
+                int,
+                "DFT max scan length"
+        ),
+        Variable(
+                "JTAG_CLOCK_NAME",
+                str,
+                "Name of JTAG clock, all ff in this clock domain will be excluded from scan chain"
+        )
+    ]
+
+
+    def get_script_path(self) -> str:
+        return os.path.join(get_script_dir(), "openroad", "dft", "opt_scan_chain.tcl")
+
+

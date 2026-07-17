@@ -73,17 +73,17 @@ def _parse_yosys_check(
             cells = re.findall(yosys_cell_rx, last_warning)
 
             if elaborate_only and "but has no driver" in last_warning:
-                debug("Ignoring undriven cell in elaborate-only mode:")
-                debug(last_warning)
+                verbose("Ignoring undriven cell in elaborate-only mode:")
+                verbose(last_warning)
             elif tristate_okay and (
                 ("tribuf" in last_warning)
                 or _check_any_tristate(cells, tristate_patterns)
             ):
-                debug("Ignoring tristate-related error:")
-                debug(last_warning)
+                verbose("Ignoring tristate-related error:")
+                verbose(last_warning)
             else:
-                debug("Encountered check error:")
-                debug(last_warning)
+                verbose("Encountered check error:")
+                verbose(last_warning)
                 errors_encountered += 1
         elif (
             starts_with_whitespace.match(line) is not None

@@ -1159,7 +1159,7 @@ class Step(ABC):
             value = state_in_result.get_by_df(input)
             if value is None and not input.optional:
                 raise StepException(
-                    f"{type(self).__name__}: missing required input '{input.id}'"
+                    f"{type(self).__name__}: missing required input UwU '{input.id}'"
                 ) from None
 
         try:

@@ -59,6 +59,7 @@ class ABCScriptCreator:
         self.map_old_dly = "map -p -B 0.2 -A 0.9 -M 0"
         self.retime_area = "retime -M 5"
         self.retime_dly = "retime -M 6"
+        #self.retime_back = "retime -M 4 -bv"
         self.map_new_area = "amap -m -Q 0.1 -F 20 -A 20 -C 5000"
 
         if config["SYNTH_ABC_AREA_USE_NF"]:
@@ -86,12 +87,14 @@ class ABCScriptCreator:
             # ORFS Area Script
             print("strash", file=f)
             print("dch", file=f)
+            print(self.retime_dly, file=f) 
             print("map -B 0.9", file=f)
             print("topo", file=f)
             print("stime -c", file=f)
             print(f"buffer -c -N {self.max_fanout}", file=f)
             print("upsize -c", file=f)
             print("dnsize -c", file=f)
+            #print(self.retime_dly, file=f)
         elif strategy == "DELAY 4":
             # ORFS Delay Script
             def repeated_sequence(f):
@@ -122,6 +125,7 @@ class ABCScriptCreator:
             print(self.rf, file=f)
 
             # Resynth/Retime
+
             if strategy == "AREA 2":
                 print(self.choice2, file=f)
             else:

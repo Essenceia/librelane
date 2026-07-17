@@ -671,6 +671,25 @@ class Flow(ABC):
         handlers.append(handler)
         register_additional_handler(handler)
 
+        path = os.path.join(self.run_dir, "debug.log")
+        handler = logging.FileHandler(path, mode="a+")
+        handler.setLevel("DEBUG")
+        handlers.append(handler)
+        register_additional_handler(handler)
+
+
+        path = os.path.join(self.run_dir, "debug.log")
+        handler = logging.FileHandler(path, mode="a+")
+        handler.setLevel("DEBUG")
+        handlers.append(handler)
+        register_additional_handler(handler)
+
+        path = os.path.join(self.run_dir, "all.log")
+        handler = logging.FileHandler(path, mode="a+")
+        handler.setLevel("ALL")
+        handlers.append(handler)
+        register_additional_handler(handler)
+
         try:
             self.config_resolved_path = os.path.join(self.run_dir, "resolved.json")
             with open(self.config_resolved_path, "w") as f:
